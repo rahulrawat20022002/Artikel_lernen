@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Article Master - Mannheim Edition</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel to transpile JSX in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Destructure hooks from React
+        const { useState, useEffect } = React;
+
+        // The database of words
+        const WORD_DATABASE = {
+            Küche: [
+                { word: 'Teller', article: 'der', english: 'Plate' },
+                { word: 'Gabel', article: 'die', english: 'Fork' },
+                { word: 'Löffel', article: 'der', english: 'Spoon' },
+                { word: 'Messer', article: 'das', english: 'Knife' },
+                { word: 'Kühlschrank', article: 'der', english: 'Fridge' },
+                { word: 'Pfanne', article: 'die', english: 'Pan' },
+                { word: 'Topf', article: 'der', english: 'Pot' },
+                { word: 'Tasse', article: 'die', english: 'Cup' },
+                { word: 'Glas', article: 'das', english: 'Glass' },
+                { word: 'Herd', article: 'der', english: 'Stove' },
+                { word: 'Mikrowelle', article: 'die', english: 'Microwave' },
+                { word: 'Wasserkocher', article: 'der', english: 'Kettle' },
+                { word: 'Spülmaschine', article: 'die', english: 'Dishwasher' },
+                { word: 'Backofen', article: 'der', english: 'Oven' },
+                { word: 'Schneidebrett', article: 'das', english: 'Cutting board' }
+            ],
+            Bad: [
+                { word: 'Zahnbürste', article: 'die', english: 'Toothbrush' },
+                { word: 'Handtuch', article: 'das', english: 'Towel' },
+                { word: 'Seife', article: 'die', english: 'Soap' },
+                { word: 'Spiegel', article: 'der', english: 'Mirror' },
+                { word: 'Dusche', article: 'die', english: 'Shower' },
+                { word: 'Waschbecken', article: 'das', english: 'Sink' },
+                { word: 'Zahnpasta', article: 'die', english: 'Toothpaste' },
+                { word: 'Föhn', article: 'der', english: 'Hairdryer' },
+                { word: 'Kamm', article: 'der', english: 'Comb' },
+                { word: 'Rasierer', article: 'der', english: 'Razor' },
+                { word: 'Badewanne', article: 'die', english: 'Bathtub' },
+                { word: 'Toilettenpapier', article: 'das', english: 'Toilet paper' }
+            ],
+            Büro_Arbeit: [
+                { word: 'Laptop', article: 'der', english: 'Laptop' },
+                { word: 'Stift', article: 'der', english: 'Pen' },
+                { word: 'Schreibtisch', article: 'der', english: 'Desk' },
+                { word: 'Maus', article: 'die', english: 'Mouse' },
+                { word: 'Papier', article: 'das', english: 'Paper' },
+                { word: 'Stuhl', article: 'der', english: 'Chair' },
+                { word: 'Drucker', article: 'der', english: 'Printer' },
+                { word: 'Notizbuch', article: 'das', english: 'Notebook' },
+                { word: 'Hefter', article: 'der', english: 'Stapler' },
+                { word: 'Tastatur', article: 'die', english: 'Keyboard' },
+                { word: 'Bildschirm', article: 'der', english: 'Screen/Monitor' },
+                { word: 'Kalender', article: 'der', english: 'Calendar' }
+            ],
+            Unterwegs: [
+                { word: 'Schlüssel', article: 'der', english: 'Key' },
+                { word: 'Handy', article: 'das', english: 'Phone' },
+                { word: 'Tasche', article: 'die', english: 'Bag' },
+                { word: 'Fahrkarte', article: 'die', english: 'Ticket' },
+                { word: 'Ausweis', article: 'der', english: 'ID Card' },
+                { word: 'Geldbeutel', article: 'der', english: 'Wallet' },
+                { word: 'Auto', article: 'das', english: 'Car' },
+                { word: 'Fahrrad', article: 'das', english: 'Bicycle' },
+                { word: 'Bus', article: 'der', english: 'Bus' },
+                { word: 'Zug', article: 'der', english: 'Train' },
+                { word: 'Regenschirm', article: 'der', english: 'Umbrella' },
+                { word: 'Ampel', article: 'die', english: 'Traffic light' }
+            ]
+        };
+
+        const PRACTICE_SCHEDULE = [
+            { time: '08:00', label: 'Morning Routine', focus: 'Bad & Küche' },
+            { time: '13:00', label: 'Lunch Break', focus: 'Büro & Essen' },
+            { time: '18:00', label: 'After Work', focus: 'Unterwegs & Einkauf' },
+            { time: '21:00', label: 'Evening Review', focus: 'Daily Scorecard' }
+        ];
+
+        // Simple SVG Icons since Lucide works differently in the browser script
+        const Icon = ({ name, color = "currentColor" }) => {
+            const styles = "w-6 h-6 " + color;
+            if (name === "bell") return <svg className={styles} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>;
+            if (name === "target") return <svg className={styles} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>;
+            if (name === "refresh") return <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>;
+            if (name === "check") return <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>;
+            return null;
+        };
+
+        function App() {
+            const [scores, setScores] = useState({ mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
+            const [currentDay] = useState(new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase());
+            const [revealed, setRevealed] = useState({});
+            const [practiceMode, setPracticeMode] = useState(false);
+            const [currentItems, setCurrentItems] = useState({});
+
+            const shuffleItems = () => {
+                const newItems = {};
+                Object.keys(WORD_DATABASE).forEach(category => {
+                    const allWords = [...WORD_DATABASE[category]];
+                    const shuffled = allWords.sort(() => 0.5 - Math.random());
+                    newItems[category] = shuffled.slice(0, 5);
+                });
+                setCurrentItems(newItems);
+                setRevealed({});
+            };
+
+            useEffect(() => {
+                shuffleItems();
+            }, []);
+
+            const toggleReveal = (word) => {
+                setRevealed(prev => ({ ...prev, [word]: !prev[word] }));
+            };
+
+            const updateScore = (increment) => {
+                setScores(prev => ({
+                    ...prev,
+                    [currentDay]: Math.max(0, prev[currentDay] + increment)
+                }));
+            };
+
+            const resetToday = () => {
+                setScores(prev => ({ ...prev, [currentDay]: 0 }));
+                shuffleItems();
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+                    <div className="max-w-4xl mx-auto space-y-6">
+                        
+                        <header className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-slate-900">German Article Master</h1>
+                                    <p className="text-slate-500 italic">Practice your daily items in Mannheim</p>
+                                </div>
+                                <div className="bg-indigo-50 p-3 rounded-full">
+                                    <Icon name="target" color="text-indigo-600" />
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-7 gap-2">
+                                {Object.entries(scores).map(([day, score]) => (
+                                    <div key={day} className={`flex flex-col items-center p-2 rounded-lg ${day === currentDay ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-600'}`}>
+                                        <span className="text-xs uppercase font-bold">{day}</span>
+                                        <span className="text-lg font-black">{score}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </header>
+
+                        <div className="flex flex-wrap gap-3 items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => setPracticeMode(!practiceMode)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${practiceMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 border'}`}
+                                >
+                                    {practiceMode ? 'Quiz Mode Active' : 'View Mode Active'}
+                                </button>
+                                <button 
+                                    onClick={shuffleItems}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-bold border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                                >
+                                    <Icon name="refresh" /> Shuffle New Items
+                                </button>
+                            </div>
+                            <button onClick={resetToday} className="px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm hover:bg-red-100">
+                                Reset Today
+                            </button>
+                        </div>
+
+                        <section className="bg-amber-50 rounded-2xl p-6 border border-amber-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Icon name="bell" color="text-amber-600" />
+                                <h2 className="text-lg font-bold text-amber-900">"Practice Time!" Alerts</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {PRACTICE_SCHEDULE.map((item, idx) => (
+                                    <div key={idx} className="bg-white p-3 rounded-xl border border-amber-200 flex flex-col items-center text-center">
+                                        <span className="text-xs font-bold text-amber-600">{item.time}</span>
+                                        <span className="text-sm font-bold text-slate-800">{item.label}</span>
+                                        <span className="text-xs text-slate-500 italic">{item.focus}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {Object.entries(currentItems).map(([catName, items]) => (
+                                <div key={catName} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                                    <h3 className="font-bold text-slate-800 border-b pb-2 mb-4 capitalize">{catName.replace('_', ' ')}</h3>
+                                    <div className="space-y-3">
+                                        {items.map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm text-slate-400">{item.english}</span>
+                                                    <span className="font-semibold text-slate-800">{item.word}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => toggleReveal(item.word)}
+                                                        className={`w-12 h-10 rounded-lg flex items-center justify-center font-black transition-all border ${
+                                                            revealed[item.word] || !practiceMode 
+                                                            ? (item.article === 'der' ? 'bg-blue-100 text-blue-700 border-blue-200' : item.article === 'die' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200')
+                                                            : 'bg-slate-200 text-transparent border-slate-300'
+                                                        }`}
+                                                    >
+                                                        {item.article}
+                                                    </button>
+                                                    {practiceMode && revealed[item.word] && (
+                                                        <button onClick={() => updateScore(1)}>
+                                                            <Icon name="check" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
